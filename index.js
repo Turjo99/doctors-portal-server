@@ -3,8 +3,7 @@ const cors = require("cors");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
 require("dotenv").config();
-//WCEfKrHri06fKFMV
-//doctorsPortal
+
 const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
@@ -21,10 +20,17 @@ async function run() {
     const appointmentOptionCollection = client
       .db("doctorsPortal")
       .collection("appointmentOptions");
+    const bookingsCollection = client.db("doctorsPortal").collection("booking");
     app.get("/appointmentOption", async (req, res) => {
       const query = {};
       const options = await appointmentOptionCollection.find(query).toArray();
       res.send(options);
+    });
+    app.post("/bookings", async (req, res) => {
+      const booking = req.body;
+      console.log(booking);
+      const result = await bookingsCollection.insertOne(booking);
+      res.send(result);
     });
   } finally {
   }
