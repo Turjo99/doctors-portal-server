@@ -21,10 +21,11 @@ async function run() {
       .db("doctorsPortal")
       .collection("appointmentOptions");
     const bookingsCollection = client.db("doctorsPortal").collection("booking");
+    const usersCollection = client.db("doctorsPortal").collection("users");
     app.get("/appointmentOption", async (req, res) => {
       const query = {};
       const date = req.query.date;
-      console.log(date);
+
       const options = await appointmentOptionCollection.find(query).toArray();
 
       // get the bookings of the provided date
@@ -44,7 +45,6 @@ async function run() {
           (slot) => !bookedSlots.includes(slot)
         );
         option.slots = remainingSlots;
-        console.log(date, option.name, remainingSlots);
       });
       res.send(options);
     });
@@ -71,6 +71,12 @@ async function run() {
       }
 
       const result = await bookingsCollection.insertOne(booking);
+      res.send(result);
+    });
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const result = await usersCollection.insertOne(user);
       res.send(result);
     });
   } finally {
