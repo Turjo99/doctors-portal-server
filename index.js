@@ -39,6 +39,7 @@ async function run() {
       .collection("appointmentOptions");
     const bookingsCollection = client.db("doctorsPortal").collection("booking");
     const usersCollection = client.db("doctorsPortal").collection("users");
+    const doctorsCollection = client.db("doctorsPortal").collection("doctors");
     app.get("/appointmentOption", async (req, res) => {
       const query = {};
       const date = req.query.date;
@@ -155,6 +156,17 @@ async function run() {
         .find(query)
         .project({ name: 1 })
         .toArray();
+      res.send(result);
+    });
+    app.get("/doctors", async (req, res) => {
+      const query = {};
+      const doctors = await doctorsCollection.find(query).toArray();
+      res.send(doctors);
+    });
+
+    app.post("/doctors", async (req, res) => {
+      const doctor = req.body;
+      const result = await doctorsCollection.insertOne(doctor);
       res.send(result);
     });
   } finally {
