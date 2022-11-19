@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const app = express();
 require("dotenv").config();
@@ -147,6 +147,14 @@ async function run() {
         updatedDoc,
         options
       );
+      res.send(result);
+    });
+    app.get("/appointmentSpecialty", async (req, res) => {
+      const query = {};
+      const result = await appointmentOptionCollection
+        .find(query)
+        .project({ name: 1 })
+        .toArray();
       res.send(result);
     });
   } finally {
