@@ -3,13 +3,17 @@ const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const app = express();
+const stripe = require("stripe")(
+  "sk_test_51M6PqYC7ChjMGzPD6RXkbkipsIoYs9pCgphgT2jA1D5fPLi6DAQUKunKxuV1WK9DlTAHEfzv0eWuano5HTh2UV4L005FWjSV5x"
+);
+
 require("dotenv").config();
 
 const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.xyxb77f.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri);
+
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -58,7 +62,7 @@ async function run() {
           (book) => book.treatment === option.name
         );
         const bookedSlots = optionBooked.map((book) => book.slot);
-        console.log(bookedSlots);
+
         const remainingSlots = option.slots.filter(
           (slot) => !bookedSlots.includes(slot)
         );
@@ -81,7 +85,6 @@ async function run() {
       const email = req.query.email;
       const decodedEmail = req.decoded.email;
 
-      console.log(decodedEmail);
       if (email !== decodedEmail) {
         return res.status(403).send({ message: "forbidden access" });
       }
@@ -108,6 +111,26 @@ async function run() {
       const result = await bookingsCollection.insertOne(booking);
       res.send(result);
     });
+    app.get("/bookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const booking = await bookingsCollection.findOne(query);
+      res.send(booking);
+    });
+    app.post("/create-payment-intent", async (req, res) => {
+      const booking = req.body;
+      const price = booking.price;
+      const amount = price * 100;
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        currency: "usd",
+        amount: amount,
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
@@ -128,7 +151,7 @@ async function run() {
 
     app.post("/users", async (req, res) => {
       const user = req.body;
-      console.log(user);
+
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
@@ -162,6 +185,21 @@ async function run() {
       );
       res.send(result);
     });
+    // app.get("/addPrice", async (req, res) => {
+    //   const filter = {};
+    //   const options = { upsert: true };
+    //   const updatedDoc = {
+    //     $set: {
+    //       price: 99,
+    //     },
+    //   };
+    //   const result = await appointmentOptionCollection.updateMany(
+    //     filter,
+    //     updatedDoc,
+    //     options
+    //   );
+    //   res.send(result);
+    // });
     app.get("/appointmentSpecialty", async (req, res) => {
       const query = {};
       const result = await appointmentOptionCollection
